@@ -5,6 +5,10 @@ import org.example.springsecurity01.repository.CustomerRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
@@ -12,6 +16,9 @@ import java.util.Optional;
 
 @RestController
 public class UserController {
+
+    @Autowired
+    AuthenticationManager authenticationManager;
 
     @Autowired
     CustomerRepository customerRepository;
@@ -41,18 +48,17 @@ public class UserController {
     }
 
 
-    @PostMapping("/login")
-    public ResponseEntity<String> login(@RequestParam String email, @RequestParam String password) {
-        return customerRepository.findByEmail(email)
-                .map(customer -> {
-                    if (passwordEncoder.matches(password, customer.getEmail())) {
-                        return ResponseEntity.ok("Login successful");
-                    } else {
-                        return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password");
-                    }
-                })
-                .orElseGet(() -> ResponseEntity.status(HttpStatus.UNAUTHORIZED).body("Invalid email or password"));
+    @PostMapping("/dologin")
+    public ResponseEntity<String> login(@RequestBody Customer customer) {
+        System.out.println("cuh work maaan");
+        Authentication authentication = authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(customer.getEmail(), customer.getPwd()));
+        if(authentication.isAuthenticated()){
 
+            return ResponseEntity.status(HttpStatus.OK)
+                    .body("Du er nu locked in cuh");
+        } else {
+            throw new UsernameNotFoundException("invalid request cuh");
+        }
 
     }
 }
